@@ -38,7 +38,13 @@ typedef struct token{
 
 
 Token nextToken();
+Token checkGet(Token t, KeyId k);
 int openSource(char fileName[]);
 void closeSource();
 void initSource();
+void errorType(char *m);
+void errorInsert(KeyId k);
+void errorMissingId();
+void errorDelete();
 void errorF(char *m);
+void setIdKind(KindT k);
