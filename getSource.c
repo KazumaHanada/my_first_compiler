@@ -9,26 +9,27 @@
 
 
 static FILE *fpi;
-//static FILE *fptex;
+static FILE *fptex;//LateX処理用
 
 
 static char line[MAXLINE]; //1行分の入力バッファ
-static int  lineIndex;
-static char ch;
+static int  lineIndex;     //上のバッファのインデックス
+static char ch;            //nextChar()で読み取った1文字を格納する
 
 
-//static Token cToken;
-static int spaces;
-static int CR;
-//static int printed;
+static Token cToken;//LateX処理用
+static KindT idKind;//LateX処理用
+static int spaces;  //LateX処理用
+static int CR;      //LateX処理用
+static int printed; //LateX処理用
 
 
 static int errorNo = 0;
 static char nextChar();
-//static void printcToken();
+static void printcToken();//LateX処理用
 
 
-struct keyWd {  //予約語
+struct keyWd {                   //予約語
 	char *word;
 	KeyId keyId;
 };
@@ -132,7 +133,7 @@ int openSource(char fileName[])
 void closeSource()
 {
 	fclose(fpi);
-	//fclose(fptex);	
+	//fclose(fptex);
 	printf("close\n");
 }
 
@@ -141,11 +142,10 @@ void initSource()
 {
 	lineIndex = -1;
 	ch = '\n';
-	//printed = 1;
+	printed = 1; //LateX処理用
 	initCharClassT();
 	
 	/*
-	//LaTeXコマンド
 	fprintf(fptex,"\\documentstyle[12pt]{article}\n");   
 	fprintf(fptex,"\\begin{document}\n");
 	fprintf(fptex,"\\fboxsep=0pt\n");
@@ -178,8 +178,7 @@ void errorF(char *m)
 {
 	errorMessage(m);
 	//fprintf(fptex, "fatal errors\n\\end{document}\n");
-	if (errorNo)
-		printf("total %d errors\n", errorNo);
+	if (errorNo) printf("total %d errors\n", errorNo);
 	printf("abort compilation\n");	
 	exit (1);
 }
@@ -220,13 +219,13 @@ char nextChar()
 
 Token nextToken()
 {
-	int i = 0;					  //字句の文字数カウントに使う
-	int num;					  //字句が定数値の場合に使用する
+	int i = 0;                    //字句の文字数カウントに使う
+	int num;                      //字句が定数値の場合に使用する
 	KeyId cc;                     //字句パターンに含まれる文字(整数値で表現)を格納する
-	Token temp;					  //戻り値として生成するトークン
+	Token temp;                   //戻り値として生成するトークン
 	char ident[MAXNAME];          //字句入力用のバッファ
 	memset(ident, '\0', MAXNAME); //identを\0でうめる 末尾にNULLをつけない
-	//printcToken();
+	printcToken();
 	spaces = 0;                   //空白カウントに使う
 	CR = 0;                       //改行カウントに使う
 	
@@ -256,7 +255,7 @@ Token nextToken()
 		}
 		
 		ch = nextChar();
-		printf("%c", ch);//個人用
+		printf("%c", ch);//出力確認用
 	}
 	
 	
@@ -269,10 +268,12 @@ Token nextToken()
 			
 			do{
 				if(i < MAXNAME){
+					
 					ident[i] = ch;
 					i++;
+					
 					ch = nextChar();
-					printf("%c", ch);//個人用
+					printf("%c", ch);//出力確認用
 				}
 			
 			}while( charClassT[ch] == letter || charClassT[ch] == digit );
@@ -294,10 +295,10 @@ Token nextToken()
 					
 					//その字句に対応するトークン名はその予約語となる
 					temp.kind = KeyWdT[i].keyId;
-					strcpy(temp.u.id, KeyWdT[i].word);///////////////////////
+					strcpy(temp.u.id, KeyWdT[i].word);//出力確認用
 					
-					//cToken = temp;
-					//printed = 0;
+					cToken = temp;//LateX処理用
+					printed = 0;  //LateX処理用
 					
 					return temp;
 				}
@@ -318,6 +319,7 @@ Token nextToken()
 				//次の文字が数字だった場合に備えて、数字の繰り上げ処理を行う
 				num = 10*num + (ch-'0');
 				i++;
+				
 				ch = nextChar();
 				printf("%c", ch);//個人用
 			
@@ -340,12 +342,13 @@ Token nextToken()
 		
 			if( (ch = nextChar()) == '='){
 				
-				printf("%c", ch);//個人用
+				printf("%c", ch);//出力確認用
 				//字句に対応するトークン名はAssignとなる
 				temp.kind = Assign;
-				strcpy(temp.u.id, ":=");//個人用
+				strcpy(temp.u.id, ":=");//出力確認用
+				
 				ch = nextChar();
-				printf("%c", ch);//個人用
+				printf("%c", ch);//出力確認用
 				
 				break;
 			
@@ -353,7 +356,7 @@ Token nextToken()
 				
 				//字句に対応するトークン名はnulとなる
 				temp.kind = nul;
-				strcpy(temp.u.id, "nul");//個人用
+				strcpy(temp.u.id, "nul");//出力確認用
 				
 				break;
 			}
@@ -364,31 +367,31 @@ Token nextToken()
 		
 			if( (ch = nextChar()) == '='){
 				
-				printf("%c", ch);//個人用
+				printf("%c", ch);//出力確認用
 				//字句に対応するトークン名はLssEqとなる
 				temp.kind = LssEq;
-				strcpy(temp.u.id, "<=");//個人用
+				strcpy(temp.u.id, "<=");//出力確認用
 				
 				ch = nextChar();
-				printf("%c", ch);//個人用
+				printf("%c", ch);//出力確認用
 				
 				break;
-			
 				
 			}else if(ch == '>'){
 				
-				printf("%c", ch); //個人用
+				printf("%c", ch); //出力確認用
 				//字句に対応するトークン名はNotEqとなる
 				temp.kind = NotEq;
-				strcpy(temp.u.id, "<>");//個人用
+				strcpy(temp.u.id, "<>");//出力確認用
+				
 				ch = nextChar();
-				printf("%c", ch);//個人用
+				printf("%c", ch);//出力確認用
 				
 				break;
 			
 			}else{
 				
-				printf("%c", ch);//個人用
+				printf("%c", ch);//出力確認用
 				//字句に対応するトークン名はLssとなる
 				temp.kind = Lss;
 				strcpy(temp.u.id, "<");
@@ -402,21 +405,22 @@ Token nextToken()
 		
 			if((ch = nextChar()) == '=' ){
 				
-				printf("%c", ch);//個人用
+				printf("%c", ch);//出力確認用
 				//字句に対応するトークン名はGtrEqとなる
 				temp.kind = GtrEq;
 				strcpy(temp.u.id, ">=");
+				
 				ch = nextChar();
-				printf("%c", ch);//個人用
+				printf("%c", ch);//出力確認用
 				
 				break;
 				
 			}else{
 				
-				printf("%c", ch);//個人用
+				printf("%c", ch);      //出力確認用
 				//字句に対応するトークン名はGtrとなる
 				temp.kind = Gtr;
-				strcpy(temp.u.id, ">");//個人用
+				strcpy(temp.u.id, ">");//出力確認用
 				
 				break;
 			}
@@ -424,27 +428,66 @@ Token nextToken()
 		
 		default:
 		
-			//字句パターンに当てはまらない場合は、トークン名はotherとなる
+			//字句パターンに当てはまらない場合、トークン名はotherとなる
 			temp.kind = cc;
-			strcpy(temp.u.id, "other");//個人用
+			strcpy(temp.u.id, "other");//出力確認用
 			ch = nextChar();
-			printf("%c", ch);//個人用
+			printf("%c", ch);          //出力確認用
 			
 			break;
 	}
 	
 	
-	//cToken =temp;
-	//printed = 0;
+	cToken =temp;//LateX処理用
+	printed = 0; //LateX処理用
 	
 	
 	return temp;
 }
 
 
-/*
+static void printSpaces()
+{
+	while (CR-- > 0){
+		//fprintf(fptex, "\\ \\par\n");
+	}
+	
+	while (spaces-- > 0){
+		//fprintf(fptex, "\\ ");
+	}
+	
+	CR = 0; spaces = 0;
+}
+
+
 static void printcToken()
 {
-	
+	int i=(int)cToken.kind;
+	if (printed){
+		printed = 0; return;
+	}
+	printed = 1;
+	printSpaces();
+	if (i < end_of_KeyWd){
+		//fprintf(fptex, "{\\bf %s}", KeyWdT[i].word);
+	}else if (i < end_of_KeySym){					
+		//fprintf(fptex, "$%s$", KeyWdT[i].word);
+	}else if (i==(int)Id){
+		switch (idKind) {
+		case varId: 
+			//fprintf(fptex, "%s", cToken.u.id); 
+			return;
+		case parId: 
+			//fprintf(fptex, "{\\sl %s}", cToken.u.id); 
+			return;
+		case funcId: 
+			//fprintf(fptex, "{\\it %s}", cToken.u.id); 
+			return;
+		case constId: 
+			//fprintf(fptex, "{\\sf %s}", cToken.u.id); 
+			return;
+		}
+	}else if (i==(int)Num){
+		//fprintf(fptex, "%d", cToken.u.value);
+	}
 }
-*/
