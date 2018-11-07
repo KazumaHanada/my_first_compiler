@@ -1,3 +1,5 @@
+#include "table.h"
+
 #define MAXNAME 31
 
 
@@ -10,7 +12,7 @@ typedef enum keys{
 	Ret,    Func,
 	Var,    Const,  Odd,
 	Write,  WriteLn,
-	end_of_KeyWd,				  //ここまで予約語
+	end_of_KeyWd,                 //ここまで予約語
 	Plus,   Minus,
 	Mult,   Div,
 	Lparen, Rparen,
@@ -18,11 +20,11 @@ typedef enum keys{
 	NotEq,  LssEq,  GtrEq,
 	Comma,  Period, Semicolon,
 	Assign,
-	end_of_KeySym,         		  //ここまで演算子、区切り記号
+	end_of_KeySym,               //ここまで演算子、区切り記号
 	Id,     Num,    nul,
-	end_of_Token,				  //ここまで識別子、定数値など
+	end_of_Token,                //ここまで識別子、定数値など
 	letter, digit,  colon, others 
-								  //字句パターンで使用される英数字など
+                                 //字句パターンで使用される英数字など
 } KeyId;
 
 
@@ -39,3 +41,4 @@ Token nextToken();
 int openSource(char fileName[]);
 void closeSource();
 void initSource();
+void errorF(char *m);

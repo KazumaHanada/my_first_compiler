@@ -1,6 +1,9 @@
 #include<stdio.h>
 #include "getSource.h"
 
+#define FIRSTADDR 2
+
+
 static Token token;
 
 int compile()
@@ -12,6 +15,7 @@ int compile()
 	
 	initSource();
 	token = nextToken();
+	blockBegin(FIRSTADDR);
 	
 	return 1;
 };
