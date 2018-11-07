@@ -1,7 +1,7 @@
-#include<stdio.h>
-#include<string.h>
-#include<stdlib.h>
-#include"getSource.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "getSource.h"
 
 
 #define MAXLINE 120
@@ -26,6 +26,7 @@ static int printed; //LateX処理用
 
 static int errorNo = 0;
 static char nextChar();
+static void printSpaces();
 static void printcToken();//LateX処理用
 
 
@@ -34,7 +35,7 @@ struct keyWd {                   //予約語
 	KeyId keyId;
 };
 
-static struct keyWd KeyWdT[] = { //予約語の字句とそれに対応するトークン名
+static struct keyWd KeyWdT[] = { //予約語、演算子、区切り記号の字句とそれに対応するトークン名
 	{"begin", Begin},
 	{"end", End},
 	{"if", If},
@@ -68,6 +69,19 @@ static struct keyWd KeyWdT[] = { //予約語の字句とそれに対応するトークン名
 	{":=", Assign},
 	{"$dummy2",end_of_KeySym}
 };
+
+
+int isKeyWd(KeyId k)
+{
+	return (k < end_of_KeyWd);
+}
+
+
+int isKeySym(KeyId k)
+{
+	if (k < end_of_KeyWd) return 0;
+	return (k < end_of_KeySym);
+}
 
 
 static KeyId charClassT[256];
@@ -163,6 +177,52 @@ void errorNoCheck()
 		//fprintf(fptex, "too many errors\n\\end{document}\n"); 
 		printf("abort compilation\n");	
 		exit (1);
+	}
+}
+
+
+void errorType(char *m)
+{
+	printSpaces();
+	//fprintf(fptex, "\\(\\stackrel{\\mbox{\\scriptsize %s}}{\\mbox{", m);
+	printcToken();
+	//fprintf(fptex, "}}\\)");
+	errorNoCheck();
+}
+
+
+void errorInsert(KeyId k)
+{
+	if (k < end_of_KeyWd){
+		//fprintf(fptex, "\\ \\insert{{\\bf %s}}", KeyWdT[k].word);
+	}else{ 
+		//fprintf(fptex, "\\ \\insert{$%s$}", KeyWdT[k].word);
+	}
+	
+	errorNoCheck();
+}
+
+
+void errorMissingId()
+{
+	//fprintf(fptex, "\\insert{Id}");
+	errorNoCheck();
+}
+
+
+void errorDelete()
+{
+	int i=(int)cToken.kind;
+	printSpaces();
+	printed = 1;//LateX処理
+	if (i < end_of_KeyWd){
+		//fprintf(fptex, "\\delete{{\\bf %s}}", KeyWdT[i].word);
+	}else if (i < end_of_KeySym){
+		//fprintf(fptex, "\\delete{$%s$}", KeyWdT[i].word);
+	}else if (i==(int)Id){
+		//fprintf(fptex, "\\delete{%s}", cToken.u.id);
+	}else if (i==(int)Num){
+		//fprintf(fptex, "\\delete{%d}", cToken.u.value);
 	}
 }
 
@@ -321,7 +381,7 @@ Token nextToken()
 				i++;
 				
 				ch = nextChar();
-				printf("%c", ch);//個人用
+				printf("%c", ch);//出力確認用
 			
 			}while(charClassT[ch] == digit);
 		
@@ -446,6 +506,25 @@ Token nextToken()
 }
 
 
+Token checkGet(Token t, KeyId k)
+{
+	//[const] [ident] [=]の場合はなにもせずに次のトークンを取得する
+	if(t.kind == k) return nextToken();
+	
+	//[const] [ident] [(予約語) or (演算子、区切り記号)]の場合は読み飛ばして、次のトークンを取得する
+	if ((isKeyWd(t.kind) && isKeyWd(k)) || (isKeySym(t.kind) && isKeySym(k))){
+		
+		errorDelete(); //LateX処理
+		errorInsert(k);//LateX処理
+		return nextToken();
+	}
+	
+	errorInsert(k);//LateX処理
+	
+	return t;
+}
+
+
 static void printSpaces()
 {
 	while (CR-- > 0){
@@ -490,4 +569,11 @@ static void printcToken()
 	}else if (i==(int)Num){
 		//fprintf(fptex, "%d", cToken.u.value);
 	}
+}
+
+
+void setIdKind(KindT k)
+{
+	idKind = k;
+	return;
 }

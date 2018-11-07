@@ -1,5 +1,5 @@
-main: main.o getSource.o compile.o table.o
-	gcc -o main main.o getSource.o compile.o table.o
+main: main.o getSource.o compile.o table.o codegen.o
+	gcc -o main main.o getSource.o compile.o table.o codegen.o
 
 main.o: main.c
 	gcc -c main.c
@@ -12,3 +12,6 @@ compile.o: compile.c
 
 table.o: table.c
 	gcc -c table.c
+
+codegen.o: codegen.c
+	gcc -c codegen.c
