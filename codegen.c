@@ -37,6 +37,24 @@ int genCodeV(OpCode op,  int v)
 }
 
 
+int genCodeT(OpCode op, int ti)
+{
+	checkMax();
+	code[cIndex].opCode = op;
+	code[cIndex].u.addr = relAddr(ti);
+	return cIndex;
+}
+
+
+int genCodeO(Operator p)
+{
+	checkMax();
+	code[cIndex].opCode = opr;
+	code[cIndex].u.optr = p;
+	return cIndex;
+}
+
+
 int genCodeR()
 {
 	if (code[cIndex].opCode == ret)

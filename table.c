@@ -1,3 +1,4 @@
+#include <string.h>
 #include "getSource.h"
 
 
@@ -22,10 +23,11 @@ typedef struct tableE {
 static TabelE nameTable[MAXTABLE];
 static int tIndex =  0;
 static int level  = -1;
-static int index[MAXLEVEL];
+static int indexL[MAXLEVEL];
 static int addr[MAXLEVEL];
 static int localAddr;
 static int tfIndex;
+
 
 void blockBegin(int firstAddr)
 {
@@ -38,7 +40,7 @@ void blockBegin(int firstAddr)
 	}
 	
 	if(level == MAXLEVEL - 1) errorF("too many nested blocks");
-	index[level] = tIndex;
+	indexL[level] = tIndex;
 	addr[level]  = localAddr;
 	localAddr = firstAddr;
 	level++;
@@ -50,7 +52,7 @@ void blockBegin(int firstAddr)
 void blockEnd()
 {
 	level --;
-	tIndex    = index[level];
+	tIndex    = indexL[level];
 	localAddr = addr[level];
 }
 
@@ -63,7 +65,7 @@ int bLevel()
 
 int fPars()
 {
-	return nameTable[index[level-1]].u.f.pars;
+	return nameTable[indexL[level-1]].u.f.pars;
 }
 
 
@@ -71,8 +73,7 @@ void enterT(char *id)
 {
 	if(++tIndex < MAXTABLE){
 		
-		//‰ðŒˆ‚Å‚«‚¸•Û—¯   Œx: ‘g‚Ýž‚ÝŠÖ” estrcpyf ‚ÌŒÝŠ·«‚ª‚È‚¢ˆÃ–Ù“I‚ÈéŒ¾‚Å‚·
-		//strcpy(nameTable[tIndex].name, id);
+		strcpy(nameTable[tIndex].name, id);
 		
 	}else{
 	
@@ -136,6 +137,47 @@ void endpar()
 void changeV(int ti, int newVal)
 {
 	nameTable[ti].u.f.raddr.addr = newVal;
+}
+
+
+int searchT(char *id, KindT k)
+{
+	int i;
+	i = tIndex;
+	strcpy(nameTable[0].name, id);
+	while( strcmp(id, nameTable[i].name) )
+		i--;
+	if ( i )
+		return i;
+	else {
+		errorType("undef");
+		if (k==varId) return enterTvar(id);
+		return 0;
+	}
+}
+
+
+KindT kindT(int i)
+{
+	return nameTable[i].kind;
+}
+
+
+RelAddr relAddr(int ti)
+{
+	return nameTable[ti].u.raddr;
+}
+
+
+int val(int ti)
+{
+	return nameTable[ti].u.value;
+}
+
+
+int pars(int ti)
+{
+	return nameTable[ti].u.f.pars;
 }
 
 
