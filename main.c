@@ -1,5 +1,6 @@
 #include<stdio.h>
-#include"getSource.h"
+#include "getSource.h"
+#include "compile.h"
 
 
 int main()
@@ -10,6 +11,7 @@ int main()
 	
 	if(!openSource(fileName) ) return 0;
 	compile();
+	
 	closeSource();
 	
 	return 1;

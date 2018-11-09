@@ -1,12 +1,13 @@
 #include "table.h"
 
+
 #define MAXNAME 31
 
 
-//予約語、演算子、区切り記号、識別子などを含むトークン名と 字句パターンで使用される英数字などを整数値で扱う
+//予約語、演算子、区切り記号、識別子、定数値を表すトークン名と 字句パターンで使用される英数字などを整数値で扱う
 typedef enum keys{  
 	
-	Begin,  End,
+	Begin,/*0*/  End,/*1*/
 	If,     Then,
 	While,  Do,
 	Ret,    Func,
@@ -45,6 +46,8 @@ void initSource();
 void errorType(char *m);
 void errorInsert(KeyId k);
 void errorMissingId();
+void errorMissingOp();
 void errorDelete();
+void errorMessage(char *m);
 void errorF(char *m);
 void setIdKind(KindT k);

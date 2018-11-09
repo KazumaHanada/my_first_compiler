@@ -210,6 +210,13 @@ void errorMissingId()
 }
 
 
+void errorMissingOp()
+{
+	//fprintf(fptex, "\\insert{$\\otimes$}");
+	errorNoCheck();
+}
+
+
 void errorDelete()
 {
 	int i=(int)cToken.kind;
@@ -245,30 +252,28 @@ void errorF(char *m)
 
 
 char nextChar()
-{
-	//最初の読み込み
+{	//最初の読み込み
 	if(lineIndex == -1){
 		
 		//1行単位で読み込む
 		if(fgets(line, MAXLINE,fpi) != NULL){
-			
+		
 			lineIndex = 0;
-			
+		
 		}else{
-			
+		
 			errorF("end of file\n");
 			exit(1);
 		}
 	}
 	
-	
 	//取得行から1文字とりだし、インデックスを次に進める
 	char ch = line[lineIndex++];
 	
-	
-	if(ch == '\n'){
+	//行末にきたら
+	if((ch == '\n') || (ch =='\r')){
 		
-		//行末にきたら、インデックスを-1に戻す
+		//インデックスを-1に戻す
 		lineIndex = -1;
 		return '\n';
 	}
@@ -296,15 +301,17 @@ Token nextToken()
 		if(ch == ' ' ){
 			
 			spaces++;
+			printf(" ");//出力確認用
 			
 		}else if(ch == '\t'){
 			
-			spaces+= 5;
+			spaces+= 4;
+			printf("    ");//出力確認用
 		
 		//nextCharを初めて呼んだ場合(initSourceで\nに初期化されているから) or nextCharで行末に達した場合
 		}else if(ch == '\n'){
 			
-			printf("\n");
+			printf("\n");//出力確認用
 			spaces = 0;
 			CR++;
 		
@@ -315,25 +322,20 @@ Token nextToken()
 		}
 		
 		ch = nextChar();
-		printf("%c", ch);//出力確認用
 	}
 	
 	
 	//字句パターンを調べる
 	switch (cc = charClassT[ch]){
 		
-		
 		//最初の文字がletter(英字)
 		case letter:  
 			
 			do{
 				if(i < MAXNAME){
-					
 					ident[i] = ch;
 					i++;
-					
 					ch = nextChar();
-					printf("%c", ch);//出力確認用
 				}
 			
 			}while( charClassT[ch] == letter || charClassT[ch] == digit );
@@ -356,10 +358,10 @@ Token nextToken()
 					//その字句に対応するトークン名はその予約語となる
 					temp.kind = KeyWdT[i].keyId;
 					strcpy(temp.u.id, KeyWdT[i].word);//出力確認用
-					
 					cToken = temp;//LateX処理用
 					printed = 0;  //LateX処理用
 					
+					printf("%s", temp.u.id);//出力確認用
 					return temp;
 				}
 			}
@@ -367,22 +369,17 @@ Token nextToken()
 			//予約語に含まれていないとき、その字句に対応するトークン名は識別子となる
 			temp.kind = Id;
 			strcpy(temp.u.id , ident);
-			
 			break;
-		
 		
 		//最初の文字がdigit(数字)
 		case digit:  
 			
 			num = 0;
 			do{
-				//次の文字が数字だった場合に備えて、数字の繰り上げ処理を行う
+				//次の文字が数字1だった場合に備えて、数字の繰り上げ処理を行う
 				num = 10*num + (ch-'0');
 				i++;
-				
 				ch = nextChar();
-				printf("%c", ch);//出力確認用
-			
 			}while(charClassT[ch] == digit);
 		
 			//字句の最大長を超えていたらエラー
@@ -396,104 +393,71 @@ Token nextToken()
 			
 			break;
 		
-		
-		//最初の文字がcolon(.)
+		//最初の文字がcolon(:)
 		case colon:
 		
 			if( (ch = nextChar()) == '='){
-				
-				printf("%c", ch);//出力確認用
 				//字句に対応するトークン名はAssignとなる
 				temp.kind = Assign;
 				strcpy(temp.u.id, ":=");//出力確認用
-				
 				ch = nextChar();
-				printf("%c", ch);//出力確認用
-				
 				break;
 			
 			}else{
-				
 				//字句に対応するトークン名はnulとなる
 				temp.kind = nul;
-				strcpy(temp.u.id, "nul");//出力確認用
-				
+				char str[2] ={':', ch};
+				strcpy(temp.u.id, str);//出力確認用
 				break;
 			}
-		
 		
 		//最初の文字がLss(<)
 		case Lss:
 		
 			if( (ch = nextChar()) == '='){
-				
-				printf("%c", ch);//出力確認用
 				//字句に対応するトークン名はLssEqとなる
 				temp.kind = LssEq;
 				strcpy(temp.u.id, "<=");//出力確認用
-				
 				ch = nextChar();
-				printf("%c", ch);//出力確認用
-				
 				break;
 				
 			}else if(ch == '>'){
-				
-				printf("%c", ch); //出力確認用
 				//字句に対応するトークン名はNotEqとなる
 				temp.kind = NotEq;
 				strcpy(temp.u.id, "<>");//出力確認用
-				
 				ch = nextChar();
-				printf("%c", ch);//出力確認用
-				
 				break;
 			
 			}else{
-				
-				printf("%c", ch);//出力確認用
 				//字句に対応するトークン名はLssとなる
 				temp.kind = Lss;
-				strcpy(temp.u.id, "<");
-				
+				strcpy(temp.u.id, "<");//出力確認用
 				break;
 			}
-		
 		
 		//最初の文字がGtr(>)
 		case Gtr:
-		
+	
 			if((ch = nextChar()) == '=' ){
-				
-				printf("%c", ch);//出力確認用
 				//字句に対応するトークン名はGtrEqとなる
 				temp.kind = GtrEq;
-				strcpy(temp.u.id, ">=");
-				
+				strcpy(temp.u.id, ">=");//出力確認用
 				ch = nextChar();
-				printf("%c", ch);//出力確認用
-				
 				break;
 				
 			}else{
-				
-				printf("%c", ch);      //出力確認用
 				//字句に対応するトークン名はGtrとなる
 				temp.kind = Gtr;
 				strcpy(temp.u.id, ">");//出力確認用
-				
 				break;
 			}
 		
-		
 		default:
 		
-			//字句パターンに当てはまらない場合、トークン名はotherとなる
 			temp.kind = cc;
-			strcpy(temp.u.id, "other");//出力確認用
+			char * str = &ch;
+			strcpy(temp.u.id, str);//出力確認用
 			ch = nextChar();
-			printf("%c", ch);          //出力確認用
-			
 			break;
 	}
 	
@@ -501,6 +465,11 @@ Token nextToken()
 	cToken =temp;//LateX処理用
 	printed = 0; //LateX処理用
 	
+	if(temp.kind == Num){
+		printf("%d", temp.u.value);
+	}else{
+		printf("%s", temp.u.id);
+	}
 	
 	return temp;
 }
